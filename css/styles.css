@@ -19,9 +19,30 @@ html {
   padding: 0;
   border: solid 1px black;
   flex: 2;
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
+}
+
+.tab-switcher {
+  display: flex;
+  flex-direction: row;
+  justify-self: start;
+}
+
+.tab-button {
+    left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 4px;
+    cursor: pointer;
+    background: none;
+    padding: 8px;
+    margin: 8px;
+    font-size: 24px;
+    outline: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 h1 {
@@ -35,9 +56,30 @@ h1 {
     padding: 0;
     display: flex;
     justify-content: center;
+    justify-self: center;
 }
 
-.main-content {
+/* .main-content {
+  margin: 0;
+  padding: 0;
+  border: solid 1px black;
+  flex: 6;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+} */
+
+.patient-content {
+  margin: 0;
+  padding: 0;
+  border: solid 1px black;
+  flex: 6;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.researcher-content {
   margin: 0;
   padding: 0;
   border: solid 1px black;

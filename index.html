@@ -5,22 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <title>VisGate</title>
-    <link rel="stylesheet" href="css/styles.css?v0.0.1">
+    <link rel="stylesheet" href="css/styles.css?v0.0.2">
 </head>
 <body>
   <div class="header">
+    <div class="tab-switcher">
+        <button id="tab-button-patient" class="tab-button">Patient</button>
+        <button id="tab-button-researcher" class="tab-button">Researcher</button>
+    </div>
     <div class="title">
         <h1>VisGate</h1>
     </div>
   </div>
   
-<main class="main-content">
-    <h2>main-content</h2>
+<!-- <main class="main-content">
+    <h2 id="main-content">main-content</h2>
+</main> -->
+
+<main class="patient-content">
+    <h2 id="patient-content">patient-content</h2>
+</main>
+
+<main class="researcher-content">
+    <h2 id="researcher-content">researcher-content</h2>
 </main>
 
 <div class="footer">
     <h2>footer</h2>
 </div>
   
-    <script src="js/scripts.js?v0.0.1"></script>
+    <script src="js/scripts.js?v0.0.2"></script>
 </body>
