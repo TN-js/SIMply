@@ -19,6 +19,11 @@ const widthViolinPlot = 450;
 const heightViolinPlot = 360;
 const marginViolinPlot = { top: 20, right: 30, bottom: 40, left: 45 };
 
+// 1.2 Line chart variables
+const widthLineChart = 450;
+const heightLineChart = 360;
+const marginLineChart = { top: 20, right: 30, bottom: 40, left: 45 };
+
 // 2. Functions
 function showPatientOnly() {
     patientButton.style.display = "flex";
@@ -101,6 +106,76 @@ function renderTestViolinPlot() {
         );
 }
 
+function renderTestLineChart() {
+    if (!window.d3) {
+        console.error("D3 did not load. The violin plot cannot render.");
+        return;
+    }
+
+    const container = d3.select("#patient-visualization");
+    container.selectAll("*").remove();
+
+    const svg = container
+        .append("svg")
+        .attr("width", widthLineChart + marginLineChart.left + marginLineChart.right)
+        .attr("height", heightLineChart + marginLineChart.top + marginLineChart.bottom);
+
+    const chart = svg
+        .append("g")
+        .attr("transform", `translate(${marginLineChart.left},${marginLineChart.top})`);
+
+    const y = d3
+        .scaleLinear()
+        .range([heightLineChart, 0]);
+    const x = d3
+        .scaleLinear()
+        .range([0, widthLineChart])
+
+    const dataset = [
+        {session:1, value:-4},
+        {session:2, value:-4},
+        {session:3, value:-3},
+        {session:4, value:-3},
+        {session:5, value:-2},
+        {session:6, value:-2},
+        {session:7, value:-1},
+        {session:8, value:-1},
+        {session:9, value:-1},
+        {session:10, value:-0}
+    ]; // todo: Replace const dataset with real data
+
+    x.domain(d3.extent(dataset, d => d.session))
+    y.domain([d3.min(dataset, d => d.value), 0])
+
+    chart.append("g").call(d3.axisLeft(y));
+    chart
+        .append("g")
+        .attr("transform", `translate(0,${heightLineChart})`)
+        .call(d3.axisBottom(x));
+
+    const line = d3.line()
+        .x(d=>x(d.session))
+        .y(d=>y(d.value))
+    
+    chart.append("path")
+        .datum(dataset)
+        .attr("fill", "none")
+        .attr("stroke", "steelblue")
+        .attr("stroke-width", 1)
+        .attr("d", line)
+
+    chart.selectAll("myCircles")
+        .data(dataset)
+        .enter()
+        .append("circle") // enter append
+            .attr("class", "session-value")
+            .attr("r", "3") // radius
+            .attr("cx", function(d) { return x(d.session) })   // center x passing through your xScale
+            .attr("cy", function(d) { return y(d.value)})   // center y through your yScale
+    // todo: Add highlighting of points and add data windows
+}
+
+
 // 2 functions needed for kernel density estimate
 function kernelDensityEstimator(kernel, X) {
     return function(V) {
@@ -127,6 +202,7 @@ function showResearcherOnly() {
 patientButton.addEventListener("click", showPatientOnly);
 researcherButton.addEventListener("click", showResearcherOnly);
 renderTestViolinPlot();
+renderTestLineChart();
 
 // Restore last selected mode. Default to patient for first-time visitors.
 const savedMode = localStorage.getItem(ACTIVE_MODE_KEY);
