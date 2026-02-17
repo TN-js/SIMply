@@ -4,7 +4,7 @@ body, html {
   gap: 1vh;
   height: 100dvh;
   font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
-  background: linear-gradient(135deg, #f6eee2 0%, #e9f3f6 45%, #fdf6ed 100%);
+  /* background: linear-gradient(135deg, #f6eee2 0%, #e9f3f6 45%, #fdf6ed 100%); */
   /* overflow: hidden; */
   display: flex;
   flex-direction: column;
@@ -60,11 +60,17 @@ h1 {
 }
 
 .title {
-    margin: 0;
-    padding: 0;
+    margin: 8px;
+    padding: 8px;
     display: flex;
-    justify-content: center;
-    justify-self: center;
+    justify-content: flex-start;
+    justify-self: start;
+}
+
+.header-logo {
+    display: block;
+    height: 96px;
+    width: auto;
 }
 
 /* .main-content {
@@ -108,9 +114,9 @@ h1 {
 }
 
 .violin-card {
-  border: 1px solid #c9d5e6;
+  border: 1px solid;
   /* border-radius: 4px; */
-  background: #f9fcff;
+  /* background: #f9fcff; */
   overflow: hidden;
   flex: 4;
 }
