@@ -1,10 +1,12 @@
 // scripts.js
 
-/* Layout idea:
- 1. variables
- 2. Functions
- 3. Event listeners
- */
+// Data
+let cadenceDataset = {
+    "Walking": [100, 105, 110, 115, 120],
+    "Sit-to-stand": [50, 55, 60, 65, 70],
+    "Timed-up-go": [30, 35, 40, 45, 50],
+    "Stair climbing": [80, 85, 90, 95, 100]
+}
 
 // 1. variables
 const patientButton = document.getElementById("tab-button-patient");
@@ -14,11 +16,6 @@ const patientContent = document.querySelector(".patient-content");
 const researcherContent = document.querySelector(".researcher-content");
 const ACTIVE_MODE_KEY = "visgateActiveMode";
 
-// 1.1 violin plot variables
-const widthViolinPlot = 450;
-const heightViolinPlot = 360;
-const marginViolinPlot = { top: 20, right: 30, bottom: 40, left: 45 };
-
 // 1.2 Line chart variables
 const widthLineChart = 450;
 const heightLineChart = 360;
@@ -26,11 +23,19 @@ const marginLineChart = { top: 20, right: 30, bottom: 40, left: 45 };
 
 // 2. Functions
 function showPatientOnly() {
-    patientButton.style.display = "flex";
+  patientButton.classList.add("active");
+  researcherButton.classList.remove("active");
+  patientContent.style.display = "flex";
+  researcherContent.style.display = "none";
+  localStorage.setItem(ACTIVE_MODE_KEY, "patient");
+}
 
-    patientContent.style.display = "flex";
-    researcherContent.style.display = "none";
-    localStorage.setItem(ACTIVE_MODE_KEY, "patient");
+function showResearcherOnly() {
+  researcherButton.classList.add("active");
+  patientButton.classList.remove("active");
+  researcherContent.style.display = "flex";
+  patientContent.style.display = "none";
+  localStorage.setItem(ACTIVE_MODE_KEY, "researcher");
 }
 
 function renderTestViolinPlot() {
@@ -42,68 +47,123 @@ function renderTestViolinPlot() {
     const container = d3.select("#researcher-visualization");
     container.selectAll("*").remove();
 
-    const svg = container
-        .append("svg")
-        .attr("width", widthViolinPlot + marginViolinPlot.left + marginViolinPlot.right)
-        .attr("height", heightViolinPlot + marginViolinPlot.top + marginViolinPlot.bottom);
+    let activities = ["Walking", "Sit-to-stand", "Timed-up-go", "Stair climbing"];
 
-    const chart = svg
-        .append("g")
-        .attr("transform", `translate(${marginViolinPlot.left},${marginViolinPlot.top})`);
+    const panelData = [{
+        metricName: 'Cadence',
+        metricMax: 180
+    }, {
+        metricName: 'Metric 2',
+        metricMax: 100
+    }, {
+        metricName: 'Metric 3',
+        metricMax: 100
+    }, {
+        metricName: 'Metric 4',
+        metricMax: 100
+    }];
 
-    const y = d3.scaleLinear().domain([0, 100]).range([heightViolinPlot, 0]);
-    const x = d3
-        .scaleBand()
-        .domain(["Activity A", "Activity B", "Activity C"])
-        .range([0, widthViolinPlot])
-        .padding(0.2);
+    container.classed("violin-grid", true);
 
-    chart.append("g").call(d3.axisLeft(y));
-    chart
-        .append("g")
-        .attr("transform", `translate(0,${heightViolinPlot})`)
-        .call(d3.axisBottom(x));
-
-    const randomA = d3.randomNormal(35, 10);
-    const randomB = d3.randomNormal(55, 12);
-    const randomC = d3.randomNormal(75, 9);
-
-    const dataByGroup = [
-        { key: "Activity A", values: Array.from({ length: 120 }, () => Math.max(0, Math.min(100, randomA()))) },
-        { key: "Activity B", values: Array.from({ length: 120 }, () => Math.max(0, Math.min(100, randomB()))) },
-        { key: "Activity C", values: Array.from({ length: 120 }, () => Math.max(0, Math.min(100, randomC()))) }
-    ];
-
-    const kde = kernelDensityEstimator(kernelEpanechnikov(7), y.ticks(50));
-    const densityByGroup = dataByGroup.map((group) => ({
-        key: group.key,
-        density: kde(group.values)
-    }));
-
-    const maxDensity = d3.max(densityByGroup, (group) => d3.max(group.density, (point) => point[1])) || 1;
-    const xNum = d3.scaleLinear().domain([-maxDensity, maxDensity]).range([0, x.bandwidth()]);
-
-    chart
-        .selectAll(".violin")
-        .data(densityByGroup)
+    const cards = container
+        .selectAll(".violin-card")
+        .data(panelData)
         .enter()
-        .append("g")
-        .attr("transform", (d) => `translate(${x(d.key)},0)`)
-        .append("path")
-        .datum((d) => d.density)
-        .attr("fill", "#3b82f6")
-        .attr("opacity", 0.7)
-        .attr("stroke", "#1e3a8a")
-        .attr("stroke-width", 1)
-        .attr(
-            "d",
-            d3
-                .area()
-                .x0((d) => xNum(-d[1]))
-                .x1((d) => xNum(d[1]))
-                .y((d) => y(d[0]))
-                .curve(d3.curveCatmullRom)
-        );
+        .append("div")
+        .attr("class", "violin-card");
+
+    cards.each(function(d, i) {
+        const card = d3.select(this);
+        const cardRect = this.getBoundingClientRect();
+        const totalWidth = Math.max(1, cardRect.width);
+        const totalHeight = Math.max(1, cardRect.height);
+        const margin = {
+            top: totalHeight * 0.10,
+            right: totalWidth * 0.05,
+            bottom: totalHeight * 0.2,
+            left: totalWidth * 0.2
+        };
+        const plotWidth = Math.max(1, totalWidth - margin.left - margin.right);
+        const plotHeight = Math.max(1, totalHeight - margin.top - margin.bottom);
+
+        const svg = card
+            .append("svg")
+            .attr("viewBox", `0 0 ${totalWidth} ${totalHeight}`)
+            .attr("preserveAspectRatio", "none");
+
+        const chart = svg
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        const y = d3.scaleLinear().domain([0, d.metricMax]).range([plotHeight, 0]);
+        const x = d3
+            .scaleBand()
+            .domain(activities)
+            .range([0, plotWidth])
+            .padding(0.2);
+
+        chart.append("g").call(d3.axisLeft(y).ticks(4));
+        chart
+            .append("g")
+            .attr("transform", `translate(0,${plotHeight})`)
+            .call(d3.axisBottom(x));
+        chart
+            .append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("x", -plotHeight / 2)
+            .attr("y", -margin.left * 0.62)
+            .attr("text-anchor", "middle")
+            .attr("fill", "#1e3a8a")
+            .style("font-size", `${Math.max(8, Math.round(totalHeight * 0.1))}px`)
+            .text(d.metricName);
+
+        const activityFactors = {
+            Walking: 0.3,
+            "Sit-to-stand": 0.45,
+            "Timed-up-go": 0.6,
+            "Stair climbing": 0.75
+        };
+        const spread = Math.max(0.8, d.metricMax * 0.08);
+        const kde = kernelDensityEstimator(kernelEpanechnikov(d.metricMax * 0.1), y.ticks(50));
+        const dataByGroup = activities.map((activity, idx) => {
+            const mean = d.metricMax * activityFactors[activity] + (i % 2 === 0 ? idx * 0.2 : idx * 0.4);
+            const random = d3.randomNormal(mean, spread);
+            const values = Array.from(
+                { length: 120 },
+                () => Math.max(0, Math.min(d.metricMax, random()))
+            );
+            return { key: activity, density: kde(values) };
+        });
+
+        const maxDensity = d3.max(dataByGroup, (group) => d3.max(group.density, (point) => point[1])) || 1;
+        const xNum = d3.scaleLinear().domain([-maxDensity, maxDensity]).range([0, x.bandwidth()]);
+
+        chart
+            .selectAll(".violin")
+            .data(dataByGroup)
+            .enter()
+            .append("g")
+            .attr("transform", (group) => `translate(${x(group.key)},0)`)
+            .append("path")
+            .datum((group) => group.density)
+            .attr("fill", "#3b82f6")
+            .attr("opacity", 0.7)
+            .attr("stroke", "#1e3a8a")
+            .attr("stroke-width", 1)
+            .attr(
+                "d",
+                d3
+                    .area()
+                    .x0((point) => xNum(-point[1]))
+                    .x1((point) => xNum(point[1]))
+                    .y((point) => y(point[0]))
+                    .curve(d3.curveCatmullRom)
+            );
+
+        chart
+            .selectAll(".tick text")
+            .style("font-size", `${Math.max(8, Math.round(totalHeight * 0.08))}px`);
+    });
 }
 
 function renderTestLineChart() {
@@ -188,14 +248,6 @@ function kernelEpanechnikov(k) {
     return function(v) {
         return Math.abs(v /= k) <= 1 ? 0.75 * (1 - v * v) / k : 0;
     };
-}
-
-function showResearcherOnly() {
-    researcherButton.style.display = "flex";
-
-    researcherContent.style.display = "flex";
-    patientContent.style.display = "none";
-    localStorage.setItem(ACTIVE_MODE_KEY, "researcher");
 }
 
 // 3. Event listeners
