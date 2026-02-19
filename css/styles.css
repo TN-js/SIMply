@@ -93,6 +93,18 @@ h1 {
   align-items: stretch;
 }
 
+.parallel-coord-plot {
+  border: solid 1px;
+}
+
+.line-plot-with-std {
+  border: solid 1px;
+}
+
+.scatter-plot-matrix {
+  border: solid 1px;
+}
+
 #researcher-visualization.violin-grid {
   width: 60%;
   height: 100%;
