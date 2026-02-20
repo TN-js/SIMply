@@ -190,6 +190,9 @@ body {
     font-weight: 600;
     color: #64748b;
     transition: all 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .tab-button:hover:not(.active) {
