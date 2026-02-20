@@ -1,54 +1,207 @@
-/* --- Global Reset for the new Navigation --- */
-.tab-button {
-    /* Change from 'none' to 'inline-flex' to ensure links act like buttons */
-    display: inline-flex; 
-    text-decoration: none; /* Crucial: removes the blue underline from links */
-    color: inherit; /* Keeps text black as per your original style */
-    
-    justify-content: center;
-    align-items: center;
-    border-radius: 4px;
-    cursor: pointer;
-    padding: 8px;
-    margin: 8px;
-    font-size: 24px;
-    outline: none;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    background: white; /* Added a default background */
-    border: 1px solid transparent; 
+/* General Layout */
+body {
+    height: auto;
+    overflow-y: auto;
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
 }
 
-/* --- Keep your original hover/active logic --- */
-.tab-button:hover {
-    background: #e0e0e0;
+.patient-content {
+    display: flex;
+    flex-direction: column;
+    padding: 30px;
+    gap: 30px;
+}
+
+/* Patient Header Section */
+.score-header {
+    display: flex;
+    align-items: baseline;
+    gap: 15px;
+    margin-bottom: 5px;
+}
+
+.patient-name-large {
+    font-size: 36px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.week-label-small {
+    font-size: 20px;
+    color: #888;
+}
+
+.score-display-large {
+    display: flex;
+    align-items: baseline;
+    margin-top: 10px;
+}
+
+.score-val-big {
+    font-size: 56px;
+    font-weight: bold;
+}
+
+.score-max-grey {
+    font-size: 24px;
+    color: #9ca3af;
+    margin-left: 15px;
+}
+
+/* Threshold Bar */
+.progress-container {
+    position: relative;
+    width: 100%;
+    height: 40px;
+    background: #e5e7eb;
+    border-radius: 6px;
+    margin-top: 30px;
+    margin-bottom: 40px;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.8s ease, background-color 0.8s ease;
+}
+
+.threshold-marker {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+}
+
+.threshold-value-green {
+    position: absolute;
+    top: -30px;
+    left: -10px;
+    color: #10b981;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.healthy-zone-label {
+    position: absolute;
+    bottom: -25px;
+    left: -40px;
+    white-space: nowrap;
+    color: #374151;
+    font-size: 14px;
+}
+
+/* Charts and Combined Box */
+.viz-row {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.viz-box {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.combined-radar-frame {
+    display: flex;
+    flex-direction: row;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    min-height: 500px;
+}
+
+.radar-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.radar-column:first-child {
+    border-right: 1px dashed #ccc;
+}
+
+/* Tooltip */
+.d3-tooltip {
+    position: absolute;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 4px;
+    pointer-events: none;
+    font-size: 12px;
+}
+
+/* --- Header Layout --- */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Distributes the 3 sections */
+    padding: 10px 40px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    height: 80px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+/* 1. Left Section (Logo) */
+.header .title {
+    flex: 1; /* Takes up 1 unit of space */
+    display: flex;
+    justify-content: flex-start;
+}
+
+.header-logo {
+    height: 55px;
+    width: auto;
+}
+
+/* 2. Middle Section (Navigation) */
+.header .tab-switcher {
+    flex: 0 0 auto; /* Only takes as much space as the buttons need */
+    display: flex;
+    gap: 8px;
+    background-color: #f1f5f9; /* Soft slate background */
+    padding: 5px;
+    border-radius: 50px;
+}
+
+/* 3. Right Section (Placeholder) */
+.header .header-right {
+    flex: 1; /* Takes up 1 unit of space, matching the logo section */
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* --- Tab Button Refinement --- */
+.tab-button {
+    text-decoration: none;
+    padding: 10px 28px;
+    border-radius: 40px;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: #64748b;
+    transition: all 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tab-button:hover:not(.active) {
+    color: #1e293b;
+    background-color: #e2e8f0;
 }
 
 .tab-button.active {
-    background: #c9d5e6;
-    border: 1px solid #1e3a8a; /* Optional: adds a border to the current tab */
-}
-
-/* --- Ensure Content Layout works --- */
-/* Since you are using flex-direction: column on the body, 
-   ensure the placeholder doesn't collapse */
-#header-placeholder {
-    display: contents; 
-}
-
-/* Keep your Researcher and Patient content styles exactly as they were */
-.patient-content, .researcher-content {
-    margin: 0;
-    padding: 1rem;
-    border: solid 1px black;
-    flex: 6; 
-}
-
-/* Fix for the Violin Grid height */
-#researcher-visualization.violin-grid {
-    width: 60%;
-    height: 100%;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(2, 1fr);
-    gap: 0.75rem;
+    background: #2563eb; /* Primary Blue */
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
 }
