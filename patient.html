@@ -4,23 +4,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <title>VisGate - Patient View</title>
-    <link rel="stylesheet" href="css/styles.css?v0.0.2">
+    <title>VisGate - Patient Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+    <div id="header-placeholder"></div>
 
-  <div id="header-placeholder"></div>
+    <main class="patient-content">
+        <div class="dashboard-controls" style="display:flex; justify-content:flex-end;">
+            <select id="patient-select"></select>
+        </div>
 
-  <main class="patient-content">
-      <h2 id="patient-title">Patient Dashboard</h2>
-      <div id="patient-visualization">
-          </div>
-  </main>
+        <section class="summary-section viz-box">
+            <div class="score-header">
+                <span id="patient-name-header" class="patient-name-large">Patient --</span>
+                <span id="week-display" class="week-label-small">Week --</span>
+            </div>
+            
+            <div class="score-display-large">
+                <span id="score-val-big" class="score-val-big">--</span>
+                <span class="score-max-grey">/100</span>
+            </div>
 
-  <div class="footer">
-      <p>&copy; 2026 VisGate Project</p>
-  </div>
-  
-  <script src="js/patient-view.js?v0.0.3"></script>
+            <div class="progress-container">
+                <div id="health-bar" class="progress-bar"></div>
+                <div class="threshold-marker" style="left: 80%; border-left: 2px dashed black;">
+                    <span class="threshold-value-green">80</span>
+                    <span class="healthy-zone-label">Healthy Zone</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="viz-row">
+            <div class="viz-box">
+                <h3 style="margin-top:0;">Weekly Progress</h3>
+                <div id="line-chart"></div>
+            </div>
+
+            <div class="combined-radar-frame">
+                <div class="radar-column">
+                    <h3>Activity Breakdown</h3>
+                    <div id="radar-activities"></div>
+                </div>
+                <div class="radar-column">
+                    <h3 id="radar-metrics-title">Activity Metrics</h3>
+                    <div id="radar-metrics"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/patient-view.js"></script>
 </body>
 </html>
