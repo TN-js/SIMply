@@ -460,3 +460,10 @@ if (savedMode === "researcher") {
 } else {
     showPatientOnly();
 }
+// About modal
+const btnAbout = document.getElementById("btn-about");
+const modalAbout = document.getElementById("modal-about");
+btnAbout.addEventListener("click", () => modalAbout.classList.add("open"));
+modalAbout.addEventListener("click", (e) => {
+    if (e.target === modalAbout) modalAbout.classList.remove("open");
+});

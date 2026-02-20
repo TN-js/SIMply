@@ -37,16 +37,15 @@ body {
 }
 
 .tab-button {
-    left: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     border-radius: 4px;
     cursor: pointer;
     background: none;
-    padding: 8px;
-    margin: 8px;
-    font-size: 24px;
+    padding: 4px 8px;
+    margin: 4px;
+    font-size: 15px;
     outline: none;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -66,8 +65,8 @@ h1 {
 }
 
 .title {
-    margin: 8px;
-    padding: 8px;
+    margin: 4px;
+    padding: 4px;
     display: flex;
     justify-content: flex-start;
     justify-self: start;
@@ -75,7 +74,7 @@ h1 {
 
 .header-logo {
     display: block;
-    height: 96px;
+    height: 40px;
     width: auto;
 }
 
@@ -158,4 +157,56 @@ h1 {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.header-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding-right: 8px;
+}
+
+.btn-about {
+    font-size: 14px;
+    padding: 4px 12px;
+    border-radius: 4px;
+    border: 1px solid #aaa;
+    cursor: pointer;
+    background: none;
+}
+
+.btn-about:hover {
+    background: #e0e0e0;
+}
+
+.footer p {
+    margin: 0;
+    font-size: 11px;
+    color: #888;
+}
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-overlay.open {
+    display: flex;
+}
+
+.modal-box {
+    background: white;
+    border-radius: 8px;
+    padding: 32px;
+    width: min(600px, 90vw);
+    max-height: 80vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
