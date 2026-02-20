@@ -109,7 +109,7 @@ body {
     display: flex;
     flex-direction: row;
     background: white;
-    border: 1px solid #000;
+    border: 1px solid #ddd;
     border-radius: 8px;
     padding: 20px;
     min-height: 500px;
