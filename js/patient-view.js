@@ -61,7 +61,7 @@ function updatePatientView(patientId) {
     d3.select("#patient-name-header").text(`Patient ${patientId}`).style("font-weight", "bold");
     d3.select("#week-display").text(`Week ${selectedWeek}`);
     d3.select("#score-val-big").text(latest.composite_score_overall.toFixed(1)).style("color", scoreColor);
-    d3.select("#health-bar").transition().duration(800).style("width", `${latest.composite_score_overall}%`).style("background-color", scoreColor);
+    d3.select("#health-bar").style("width", `${latest.composite_score_overall}%`).style("background-color", scoreColor);
 
     renderLineChart(patientData);
     renderRadarCharts(patientData, selectedWeek);
