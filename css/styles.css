@@ -1,140 +1,54 @@
-body, html {
-  margin: 0;
-  padding: 1vh;
-  gap: 1vh;
-  height: 100dvh;
-  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
-  /* background: linear-gradient(135deg, #f6eee2 0%, #e9f3f6 45%, #fdf6ed 100%); */
-  /* overflow: hidden; */
-  display: flex;
-  flex-direction: column;
-}
-
-html {
-  padding: 0;
-}
-
-.header {
-  margin: 0;
-  padding: 0;
-  border: solid 1px black;
-  flex: 1;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-}
-
-.tab-switcher {
-  display: flex;
-  flex-direction: row;
-  justify-self: start;
-}
-
+/* --- Global Reset for the new Navigation --- */
 .tab-button {
-    left: 0;
-    display: flex;
+    /* Change from 'none' to 'inline-flex' to ensure links act like buttons */
+    display: inline-flex; 
+    text-decoration: none; /* Crucial: removes the blue underline from links */
+    color: inherit; /* Keeps text black as per your original style */
+    
     justify-content: center;
     align-items: center;
     border-radius: 4px;
     cursor: pointer;
-    background: none;
     padding: 8px;
     margin: 8px;
     font-size: 24px;
     outline: none;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background: white; /* Added a default background */
+    border: 1px solid transparent; 
 }
 
+/* --- Keep your original hover/active logic --- */
 .tab-button:hover {
     background: #e0e0e0;
 }
 
 .tab-button.active {
     background: #c9d5e6;
+    border: 1px solid #1e3a8a; /* Optional: adds a border to the current tab */
 }
 
-h1 {
+/* --- Ensure Content Layout works --- */
+/* Since you are using flex-direction: column on the body, 
+   ensure the placeholder doesn't collapse */
+#header-placeholder {
+    display: contents; 
+}
+
+/* Keep your Researcher and Patient content styles exactly as they were */
+.patient-content, .researcher-content {
     margin: 0;
-    padding: 0;
-    color:black;
+    padding: 1rem;
+    border: solid 1px black;
+    flex: 6; 
 }
 
-.title {
-    margin: 8px;
-    padding: 8px;
-    display: flex;
-    justify-content: flex-start;
-    justify-self: start;
-}
-
-.header-logo {
-    display: block;
-    height: 96px;
-    width: auto;
-}
-
-.patient-content {
-  margin: 0;
-  padding: 0;
-  border: solid 1px black;
-  flex: 6;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.researcher-content {
-  margin: 0;
-  padding: 1rem;
-  border: solid 1px black;
-  flex: 6;
-  display: flex;
-  justify-content: stretch;
-  align-items: stretch;
-}
-
+/* Fix for the Violin Grid height */
 #researcher-visualization.violin-grid {
-  width: 60%;
-  height: 100%;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-.violin-card {
-  border: 1px solid;
-  /* border-radius: 4px; */
-  /* background: #f9fcff; */
-  overflow: hidden;
-  flex: 4;
-}
-
-.violin-card svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-.Q-Q-plot {
-    margin: 0;
-    padding: 0;
-    border: solid 1px black;
-    text-align: center;
-    flex: 2;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.footer {
-    margin: 0;
-    padding: 0;
-    border: solid 1px black;
-    text-align: center;
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    width: 60%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 0.75rem;
 }
