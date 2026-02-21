@@ -68,6 +68,13 @@ function showResearcherOnly() {
   localStorage.setItem(ACTIVE_MODE_KEY, "researcher");
   renderParallelCoordinatesPlot();
   renderViolinPlot();
+  renderLineChartWithSTD();
+}
+
+function getStandardDeviation (array) {
+    const n = array.length
+    const mean = array.reduce((a, b) => a + b) / n
+    return Math.sqrt(array.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n)
 }
 
 async function renderViolinPlot() {
@@ -108,7 +115,7 @@ async function renderViolinPlot() {
     const plotWidth = width - margin.left - margin.right;
     const plotHeight = height - margin.top - margin.bottom;
 
-    const rows = await d3.csv("data/longitudinal_gait_metrics_12weeks.csv");
+    const rows = await d3.csv("data/dashboard_data.csv");
     const activityLabels = {
         W: "Walking",
         WALKING: "Walking",
@@ -228,7 +235,7 @@ async function renderParallelCoordinatesPlot() {
     const plotWidth = width - margin.left - margin.right;
     const plotHeight = height - margin.top - margin.bottom;
 
-    const rows = await d3.csv("data/longitudinal_gait_metrics_12weeks.csv");
+    const rows = await d3.csv("data/dashboard_data.csv");
     const byWeekActivity = new Map();
 
     rows.forEach((row) => {
@@ -363,6 +370,160 @@ async function renderParallelCoordinatesPlot() {
         .style("font-size", "12px")
         .text((dimension) => dimension);
 }
+
+async function renderLineChartWithSTD() {
+    if (!window.d3) {
+        console.error("D3 did not load. The LineChart cannot render.");
+        return;
+    }
+    const container = d3.select("#line-plot-with-std");
+    container.selectAll("*").remove();
+
+    const el = document.getElementById("line-plot-with-std");
+    const width = el.clientWidth;
+    const height = el.clientHeight;
+    const margin = { top: 20, right: 20, bottom: 28, left: 20 };
+    const plotWidth = width - margin.left - margin.right;
+    const plotHeight = height - margin.top - margin.bottom;
+    
+    const rows = await d3.csv("data/dashboard_data.csv");
+    const byWeekActivity = new Map();
+    
+    rows.forEach((row) => {
+        const activity = String(row.activity || "").trim().toUpperCase();
+        if (activity !== "W" && activity !== "TUG") return;
+        const week = Number(row.week);
+        if (!Number.isFinite(week)) return;
+
+        const key = `${week}-${activity}`;
+        if (!byWeekActivity.has(key)) {
+            byWeekActivity.set(key, {
+                week,
+                activity,
+                gsi: [],
+                gir: [],
+                gil: [],
+                cadence: [],
+                symmetry: []
+            });
+        }
+        
+        
+        const bucket = byWeekActivity.get(key);
+        const gsi = Number(row.GSI_pct);
+        const gir = Number(row.gait_index_right_pct);
+        const gil = Number(row.gait_index_left_pct);
+        const cadence = Number(row.cadence_total_steps_min);
+        const symmetry = Number(row.symmetry_ratio);
+        
+        if (Number.isFinite(gsi)) bucket.gsi.push(gsi);
+        if (Number.isFinite(gir)) bucket.gir.push(gir);
+        if (Number.isFinite(gil)) bucket.gil.push(gil);
+        if (Number.isFinite(cadence)) bucket.cadence.push(cadence);
+        if (Number.isFinite(symmetry)) bucket.symmetry.push(symmetry);
+    });
+    
+    var maxWeek = 0;
+    var minWeek = 1
+    const weekMap = new Map();
+    byWeekActivity.forEach((entry) => {
+        if (!weekMap.has(entry.week)) weekMap.set(entry.week, { week: entry.week });
+        const target = weekMap.get(entry.week);
+        const prefix = entry.activity === "TUG" ? "TUG" : "W";
+        const mean = (arr) => (arr.length ? d3.mean(arr) : NaN);
+        maxWeek = Math.max(maxWeek, entry.week);
+        minWeek = Math.min(minWeek, entry.week);
+        target[`GSI-${prefix}`] = mean(entry.gsi);
+        target[`GIR-${prefix}`] = mean(entry.gir);
+        target[`GIL-${prefix}`] = mean(entry.gil);
+        target[`GSI-${prefix}-STD`] = getStandardDeviation(entry.gsi);
+        target[`GIR-${prefix}-STD`] = getStandardDeviation(entry.gir);
+        target[`GIL-${prefix}-STD`] = getStandardDeviation(entry.gil);
+    });
+    
+    const dimensions = [
+        "GSI-TUG",
+        "GSI-W",
+        "GIR-TUG",
+        "GIL-TUG",
+        "GIR-W",
+        "GIL-W"
+    ];
+
+    const data = Array.from(weekMap.values())
+        .map((row) => ({
+            week: row.week,
+            "GSI-TUG": row["GSI-TUG"],
+            "GSI-W": row["GSI-W"],
+            "GIR-TUG": row["GIR-TUG"],
+            "GIL-TUG": row["GIL-TUG"],
+            "GIR-W": row["GIR-W"],
+            "GIL-W": row["GIL-W"],
+            "GSI-TUG-STD": row["GSI-TUG-STD"],
+            "GSI-W-STD": row["GSI-W-STD"],
+            "GIR-TUG-STD": row["GIR-TUG-STD"],
+            "GIL-TUG-STD": row["GIL-TUG-STD"],
+            "GIR-W-STD": row["GIR-W-STD"],
+            "GIL-W-STD": row["GIL-W-STD"],
+        }))
+        .filter((row) => dimensions.every((dimension) => Number.isFinite(row[dimension])))
+        .sort((a, b) => a.week - b.week);
+
+
+    
+    const svg = container
+        .append("svg")
+        .attr("width", widthLineChart + marginLineChart.left + marginLineChart.right)
+        .attr("height", heightLineChart + marginLineChart.top + marginLineChart.bottom);
+
+    const chart = svg
+        .append("g")
+        .attr("transform", `translate(${marginLineChart.left},${marginLineChart.top})`);
+
+    const y = d3
+        .scaleLinear()
+        .range([heightLineChart, 0]);
+    const x = d3
+        .scaleLinear()
+        .range([0, widthLineChart])
+
+    x.domain([minWeek, maxWeek])
+    y.domain([-5, 50])
+
+    chart.append("g").call(d3.axisLeft(y));
+    chart
+        .append("g")
+        .attr("transform", `translate(0,${heightLineChart})`)
+        .call(d3.axisBottom(x));
+        
+    const color = d3.scaleOrdinal(d3.schemeCategory10);
+
+    dimensions.forEach((dim) =>{
+        const line = d3.line()
+            .x(d=>x(d.week))
+            .y(d=>y(d[dim]))
+        
+        const areaToShade = d3.area()
+            .x(d=>x(d.week))
+            .y0(d=>y(d[dim] - d[dim+"-STD"]))
+            .y1(d=>y(d[dim] + d[dim+"-STD"]))
+
+        
+        chart.append("path")
+            .datum(data)
+            .attr("fill", "none")
+            .attr("stroke", color(dim))
+            .attr("stroke-width", 1)
+            .attr("d", line)
+        
+        chart.append("path")
+            .datum(data)
+            .attr("fill", color(dim))
+            .attr("opacity", 0.5)
+            .attr("d", areaToShade)
+        console.log(color[dim])
+    })
+    }
 
 function renderTestLineChart() {
     if (!window.d3) {
