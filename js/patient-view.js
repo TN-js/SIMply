@@ -7,57 +7,110 @@ const ACTIVITY_METRICS = {
     "SC": ["total_peaks_norm", "total_duration_sec_norm", "cadence_total_steps_min_norm"]
 };
 
-let globalData = [], selectedPatientId = null, selectedWeek = null, selectedActivity = null;
+let globalData = []; // Declare globalData globally to ensure it is accessible throughout the script
+let selectedPatientId = null; // Declare selectedPatientId globally
+let selectedActivity = null; // Declare selectedActivity globally
+let selectedWeek = null; // Declare selectedWeek globally
 
-const tooltip = d3.select("body").append("div").attr("class", "d3-tooltip").style("opacity", 0);
-const scoreColorScale = d3.scaleLinear().domain([0, 50, 80, 100]).range(["#ef4444", "#f59e0b", "#10b981", "#059669"]);
+async function loadPatientData(patientId) {
+    const activities = ["W", "STS", "TUG", "SC"];
+    let patientData = [];
 
-window.addEventListener('openModal', (e) => {
-    const type = e.detail.type;
-    const modal = document.getElementById('chart-modal');
-    const container = d3.select("#modal-chart-container");
-    const title = d3.select("#modal-title");
-    
-    modal.style.display = 'flex';
-    container.selectAll("*").remove();
-    const patientData = globalData.filter(d => d.user_id === selectedPatientId);
-
-    if (type === 'line') {
-        title.text("Detailed Weekly Progress");
-        renderLineChart(patientData, "#modal-chart-container", 1100, 500);
-    } else {
-        title.text("Activity & Metric Comparison");
-        const wrapper = container.append("div").attr("class", "modal-radar-wrapper").style("display","flex").style("width","100%");
-        wrapper.append("div").attr("id", "modal-radar-act").style("flex", "1");
-        wrapper.append("div").attr("id", "modal-radar-met").style("flex", "1");
-        renderRadarCharts(patientData, selectedWeek, true);
+    for (const activity of activities) {
+        const filePath = `data/users/${patientId}/${patientId}_${activity}.csv`;
+        try {
+            const activityData = await d3.csv(filePath, d => ({
+                ...d,
+                user_id: +d.user_id,
+                week: +d.week,
+                composite_score_overall: +d.composite_score_overall,
+                composite_score: +d.composite_score,
+                GSI_pct_norm: +d.GSI_pct_norm,
+                symmetry_ratio_norm: +d.symmetry_ratio_norm,
+                cadence_total_steps_min_norm: +d.cadence_total_steps_min_norm,
+                step_time_cv_pct_norm: +d.step_time_cv_pct_norm,
+                total_duration_sec_norm: +d.total_duration_sec_norm,
+                total_peaks_norm: +d.total_peaks_norm,
+                cycle_time_cv_pct_norm: +d.cycle_time_cv_pct_norm,
+                gait_index_left_pct_norm: +d.gait_index_left_pct_norm
+            }));
+            console.log(`Loaded data for ${activity}:`, activityData);
+            patientData = patientData.concat(activityData);
+        } catch (error) {
+            console.error(`Error loading data for ${activity} from ${filePath}:`, error);
+        }
     }
-});
 
-async function initPatientPage() {
-    await loadSharedHeader(); 
-    globalData = await d3.csv("data/dashboard_data.csv", d => ({
-        ...d, user_id: +d.user_id, week: +d.week,
-        composite_score_overall: +d.composite_score_overall,
-        composite_score: +d.composite_score,
-        GSI_pct_norm: +d.GSI_pct_norm, symmetry_ratio_norm: +d.symmetry_ratio_norm,
-        cadence_total_steps_min_norm: +d.cadence_total_steps_min_norm,
-        step_time_cv_pct_norm: +d.step_time_cv_pct_norm,
-        total_duration_sec_norm: +d.total_duration_sec_norm,
-        total_peaks_norm: +d.total_peaks_norm,
-        cycle_time_cv_pct_norm: +d.cycle_time_cv_pct_norm,
-        gait_index_left_pct_norm: +d.gait_index_left_pct_norm
-    }));
-
-    setupPatientSelector();
-    if (globalData.length > 0) updatePatientView(globalData[0].user_id);
+    console.log(`Final patient data for ID ${patientId}:`, patientData);
+    return patientData;
 }
 
-function setupPatientSelector() {
-    const userIds = Array.from(new Set(globalData.map(d => d.user_id)));
-    const select = d3.select("#patient-select");
-    select.on("change", function() { updatePatientView(+this.value); });
-    select.selectAll("option").data(userIds).enter().append("option").text(d => `Patient ${d}`).attr("value", d => d);
+async function initPatientPage() {
+    await loadSharedHeader();
+    const firstPatientId = 1; // Default to the first patient
+    console.log("Initializing patient page...");
+    globalData = await loadPatientData(firstPatientId);
+    console.log("Global data initialized:", globalData);
+    setupPatientSelector();
+    if (globalData.length > 0) updatePatientView(firstPatientId);
+}
+
+async function setupPatientSelector() {
+    try {
+        // Fetch the list of user IDs by scanning the data/users directory
+        const response = await fetch("data/users/");
+        const text = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, "text/html");
+        let userIds = Array.from(doc.querySelectorAll("a"))
+            .map(link => link.textContent)
+            .filter(name => !isNaN(name)) // Filter only numeric folder names
+            .map(Number); // Convert to numbers
+
+        // Fallback to hardcoded user IDs if no user IDs are found
+        if (userIds.length === 0) {
+            console.warn("No user IDs found in data/users/. Falling back to hardcoded user IDs.");
+            userIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+        }
+
+        console.log("Extracted user IDs from data/users/ directory:", userIds); // Debugging log
+
+        const select = d3.select("#patient-select");
+        select.on("change", async function() {
+            const patientId = +this.value;
+            selectedPatientId = patientId; // Update selectedPatientId
+            globalData = await loadPatientData(patientId);
+            updatePatientView(patientId);
+        });
+
+        select.selectAll("option")
+            .data(userIds)
+            .enter()
+            .append("option")
+            .text(d => `Patient ${d}`)
+            .attr("value", d => d);
+    } catch (error) {
+        console.error("Error fetching user IDs from data/users/ directory:", error);
+
+        // Fallback to hardcoded user IDs in case of an error
+        const userIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+        console.warn("Using hardcoded user IDs:", userIds);
+
+        const select = d3.select("#patient-select");
+        select.on("change", async function() {
+            const patientId = +this.value;
+            selectedPatientId = patientId; // Update selectedPatientId
+            globalData = await loadPatientData(patientId);
+            updatePatientView(patientId);
+        });
+
+        select.selectAll("option")
+            .data(userIds)
+            .enter()
+            .append("option")
+            .text(d => `Patient ${d}`)
+            .attr("value", d => d);
+    }
 }
 
 /**
@@ -192,21 +245,53 @@ function drawRadar(containerId, data, onClick = null, size = 260) {
         .style("cursor", onClick ? "pointer" : "default")
         .on("click", onClick ? (event, d) => onClick({axis: d}) : null);
 
-    const radarLine = d3.lineRadial().radius(d => rScale(d.value)).angle((d, i) => i * angleSlice).curve(d3.curveLinearClosed);
-    
+    const radarLine = d3.lineRadial()
+        .radius(d => rScale(d.value || 0)) // Default to 0 if value is undefined or null
+        .angle((d, i) => i * angleSlice)
+        .curve(d3.curveLinearClosed);
+
     data.forEach((d) => {
         svg.append("path").datum(d.values).attr("d", radarLine).attr("fill", "#3b82f6").attr("fill-opacity", 0.2).attr("stroke", "#3b82f6").attr("stroke-width", 2);
-        
+
         svg.selectAll(".point").data(d.values).enter().append("circle").attr("r", 5)
-            .attr("cx", (p, i) => rScale(p.value) * Math.cos(angleSlice*i - Math.PI/2))
-            .attr("cy", (p, i) => rScale(p.value) * Math.sin(angleSlice*i - Math.PI/2))
+            .attr("cx", (p, i) => rScale(p.value || 0) * Math.cos(angleSlice*i - Math.PI/2)) // Default to 0 if value is undefined or null
+            .attr("cy", (p, i) => rScale(p.value || 0) * Math.sin(angleSlice*i - Math.PI/2)) // Default to 0 if value is undefined or null
             .attr("fill", "#1d4ed8")
             .on("mouseover", (event, p) => {
                 tooltip.transition().duration(100).style("opacity", 1);
-                tooltip.html(`${p.axis}: <b>${p.value.toFixed(1)}</b>`).style("left", (event.pageX + 10) + "px").style("top", (event.pageY - 28) + "px");
-            })
-            .on("mouseout", () => tooltip.transition().duration(300).style("opacity", 0));
+                tooltip.html(`${p.axis}: <b>${p.value ? p.value.toFixed(1) : 0}</b>`).style("left", (event.pageX + 10) + "px").style("top", (event.pageY - 28) + "px");
+            });
     });
 }
 
-initPatientPage();
+function scoreColorScale(score) {
+    if (score >= 80) {
+        return "#22c55e"; // Green for high scores
+    } else if (score >= 50) {
+        return "#facc15"; // Yellow for medium scores
+    } else {
+        return "#ef4444"; // Red for low scores
+    }
+}
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    initPatientPage();
+    // Modal enlarge handler
+    window.addEventListener('openModal', async (e) => {
+        const { type } = e.detail;
+        const modal = document.getElementById('chart-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalContainer = document.getElementById('modal-chart-container');
+        modal.style.display = 'flex';
+        modalTitle.textContent = type === 'line' ? 'Weekly Progress' : 'Activity Breakdown';
+        modalContainer.innerHTML = '';
+        if (type === 'line') {
+            renderLineChart(globalData.filter(d => d.user_id === selectedPatientId), '#modal-chart-container', 1200, 500);
+        } else if (type === 'radar') {
+            // Create containers for enlarged radar charts
+            modalContainer.innerHTML = '<div id="modal-radar-act" style="flex:1"></div><div id="modal-radar-met" style="flex:1"></div>';
+            renderRadarCharts(globalData.filter(d => d.user_id === selectedPatientId), selectedWeek, true);
+        }
+    });
+});
